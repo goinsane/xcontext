@@ -15,6 +15,7 @@
 *.py[co]
 
 .DS_Store
+*.icloud
 
 *.project
 *.includepath
@@ -25,5 +26,6 @@
 *.vscode
 
 /vendor
+/target
 
 /LOCALNOTES
