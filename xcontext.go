@@ -3,6 +3,7 @@ package xcontext
 
 import (
 	"context"
+	"sync"
 	"time"
 )
 
@@ -43,7 +44,7 @@ func DelayContext2(ctx context.Context, delay time.Duration) context.Context {
 }
 
 // MultiContext creates a new cancel context inherited from parent.
-// It would be cancelled when at least one of the sub context is done.
+// It would be cancelled when at least one of the sub contexts is done.
 // Calling the cancel function is not necessary.
 func MultiContext(parent context.Context, subs ...context.Context) (context.Context, context.CancelFunc) {
 	newCtx, newCtxCancel := context.WithCancel(parent)
@@ -62,5 +63,34 @@ func MultiContext(parent context.Context, subs ...context.Context) (context.Cont
 // MultiContext2 is similar with MultiContext except not returns cancel function.
 func MultiContext2(parent context.Context, subs ...context.Context) context.Context {
 	newCtx, _ := MultiContext(parent, subs...)
+	return newCtx
+}
+
+// WaitContext creates a new cancel context inherited from parent.
+// It would be cancelled when all of the sub contexts are done.
+// Calling the cancel function is not necessary.
+func WaitContext(parent context.Context, subs ...context.Context) (context.Context, context.CancelFunc) {
+	newCtx, newCtxCancel := context.WithCancel(parent)
+	var wg sync.WaitGroup
+	for _, sub := range subs {
+		wg.Add(1)
+		go func(sub context.Context) {
+			select {
+			case <-sub.Done():
+			case <-newCtx.Done():
+			}
+			wg.Done()
+		}(sub)
+	}
+	go func() {
+		wg.Wait()
+		newCtxCancel()
+	}()
+	return newCtx, newCtxCancel
+}
+
+// WaitContext2 is similar with WaitContext except not returns cancel function.
+func WaitContext2(parent context.Context, subs ...context.Context) context.Context {
+	newCtx, _ := WaitContext(parent, subs...)
 	return newCtx
 }
