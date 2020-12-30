@@ -6,20 +6,26 @@ import (
 	"time"
 )
 
-// DelayContext creates a new cancel context. It would be cancel when ctx is done except before delay.
+// DelayContext creates a new cancel context.
+// It would be cancelled when ctx is done except before delay.
 // Calling the cancel function is not necessary.
 func DelayContext(ctx context.Context, delay time.Duration) (context.Context, context.CancelFunc) {
 	newCtx, newCtxCancel := context.WithCancel(context.Background())
 	go func() {
+		parentCtx := ctx
 		delayCh := time.After(delay)
+		delayOkCh := make(chan time.Time)
 		for done := false; !done; {
 			select {
-			case <-ctx.Done():
-				select {
-				case <-delayCh:
+			case <-parentCtx.Done():
+				parentCtx = context.Background()
+				if delayCh == delayOkCh {
 					done = true
-				default:
-					<-time.After(250 * time.Millisecond)
+				}
+			case <-delayCh:
+				delayCh = delayOkCh
+				if parentCtx != ctx {
+					done = true
 				}
 			case <-newCtx.Done():
 				done = true
