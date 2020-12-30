@@ -94,3 +94,23 @@ func WaitContext2(parent context.Context, subs ...context.Context) context.Conte
 	newCtx, _ := WaitContext(parent, subs...)
 	return newCtx
 }
+
+// Or creates a new cancel context to cancel when at least one of the contexts is done.
+func Or(ctxs ...context.Context) (context.Context, context.CancelFunc) {
+	return MultiContext(context.Background(), ctxs...)
+}
+
+// Or2 is similar with Or except not returns cancel function.
+func Or2(ctxs ...context.Context) context.Context {
+	return MultiContext2(context.Background(), ctxs...)
+}
+
+// And creates a new cancel context to cancel when all of the contexts are done.
+func And(ctxs ...context.Context) (context.Context, context.CancelFunc) {
+	return WaitContext(context.Background(), ctxs...)
+}
+
+// And2 is similar with And except not returns cancel function.
+func And2(ctxs ...context.Context) context.Context {
+	return WaitContext2(context.Background(), ctxs...)
+}
