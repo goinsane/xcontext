@@ -36,22 +36,25 @@ func DelayContext2(ctx context.Context, delay time.Duration) context.Context {
 	return newCtx
 }
 
-// MultiContext creates a new cancel context inherited from parent. It would be cancel when sub is done.
+// MultiContext creates a new cancel context inherited from parent.
+// It would be cancelled when at least one of the sub context is done.
 // Calling the cancel function is not necessary.
-func MultiContext(parent, sub context.Context) (context.Context, context.CancelFunc) {
+func MultiContext(parent context.Context, subs ...context.Context) (context.Context, context.CancelFunc) {
 	newCtx, newCtxCancel := context.WithCancel(parent)
-	go func() {
-		select {
-		case <-sub.Done():
-		case <-newCtx.Done():
-		}
-		newCtxCancel()
-	}()
+	for _, sub := range subs {
+		go func(sub context.Context) {
+			select {
+			case <-sub.Done():
+			case <-newCtx.Done():
+			}
+			newCtxCancel()
+		}(sub)
+	}
 	return newCtx, newCtxCancel
 }
 
 // MultiContext2 is similar with MultiContext except not returns cancel function.
-func MultiContext2(parent, sub context.Context) context.Context {
-	newCtx, _ := MultiContext(parent, sub)
+func MultiContext2(parent context.Context, subs ...context.Context) context.Context {
+	newCtx, _ := MultiContext(parent, subs...)
 	return newCtx
 }
