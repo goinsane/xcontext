@@ -15,6 +15,7 @@ var (
 	}
 )
 
+// IsContextError returns whether err is context error.
 func IsContextError(err error) bool {
 	return isContextError(err)
 }
