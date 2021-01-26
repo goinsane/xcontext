@@ -26,11 +26,11 @@ func (l *Locker) Lock(ctx context.Context) error {
 }
 
 func (l *Locker) Unlock() {
-	l.init()
-	if len(l.ch) <= 0 {
+	select {
+	case <-l.ch:
+	default:
 		panic("unlock of unlocked Locker")
 	}
-	<-l.ch
 }
 
 func (l *Locker) TryLock(ctx context.Context) error {
