@@ -20,7 +20,7 @@ type Locker struct {
 //
 // If ctx is nil, it uses context.Background().
 func (l *Locker) LockContext(ctx context.Context) error {
-	l.init()
+	l.initialize()
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -35,18 +35,10 @@ func (l *Locker) LockContext(ctx context.Context) error {
 }
 
 // TryLock tries to lock l.
-// If ctx is done before calling the TryLock, it returns context error.
 // If the Locker is already in use, it returns ErrAlreadyLocked immediately.
-//
-// If ctx is nil, it uses context.Background().
-func (l *Locker) TryLock(ctx context.Context) error {
-	l.init()
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (l *Locker) TryLock() error {
+	l.initialize()
 	select {
-	case <-ctx.Done():
-		return ctx.Err()
 	case l.ch <- struct{}{}:
 		return nil
 	default:
@@ -72,7 +64,7 @@ func (l *Locker) Unlock() {
 	}
 }
 
-func (l *Locker) init() {
+func (l *Locker) initialize() {
 	if l.ch != nil {
 		return
 	}
