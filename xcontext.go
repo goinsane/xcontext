@@ -114,3 +114,22 @@ func And(ctxs ...context.Context) (context.Context, context.CancelFunc) {
 func And2(ctxs ...context.Context) context.Context {
 	return WaitContext2(context.Background(), ctxs...)
 }
+
+// AutoCancel cancels underlying context specified with cancel function automatically.
+func AutoCancel(ctx context.Context, cancel context.CancelFunc) context.Context {
+	go func() {
+		<-ctx.Done()
+		cancel()
+	}()
+	return ctx
+}
+
+// WithDeadline2 is similar with context.WithDeadline, except that it doesn't need to cancel context.
+func WithDeadline2(parent context.Context, d time.Time) context.Context {
+	return AutoCancel(context.WithDeadline(parent, d))
+}
+
+// WithTimeout2 is similar with context.WithTimeout, except that it doesn't need to cancel context.
+func WithTimeout2(parent context.Context, timeout time.Duration) context.Context {
+	return AutoCancel(context.WithTimeout(parent, timeout))
+}
