@@ -2,11 +2,6 @@ package xcontext
 
 import (
 	"context"
-	"errors"
-)
-
-var (
-	ErrAlreadyLocked = errors.New("already locked")
 )
 
 var (
