@@ -17,7 +17,7 @@ func DelayContext(ctx context.Context, delay time.Duration) (context.Context, co
 		parentCtx := ctx
 		parentCtxOk := context.Background()
 		delayCh := time.After(delay)
-		delayOkCh := make(chan time.Time)
+		delayOkCh := make(<-chan time.Time)
 		for done := false; !done; {
 			select {
 			case <-parentCtx.Done():
@@ -42,6 +42,40 @@ func DelayContext(ctx context.Context, delay time.Duration) (context.Context, co
 // DelayContext2 is similar with DelayContext except not returns cancel function.
 func DelayContext2(ctx context.Context, delay time.Duration) context.Context {
 	newCtx, _ := DelayContext(ctx, delay)
+	return newCtx
+}
+
+// DelayAfterContext creates a new cancel context not inherited from ctx.
+// It would be cancelled after the delay started when ctx is done.
+// The new context doesn't inherit ctx.
+// Calling the cancel function is not necessary.
+func DelayAfterContext(ctx context.Context, delay time.Duration) (context.Context, context.CancelFunc) {
+	newCtx, newCtxCancel := context.WithCancel(context.Background())
+	go func() {
+		parentCtx := ctx
+		parentCtxOk := context.Background()
+		delayCh := make(<-chan time.Time)
+		for done := false; !done; {
+			select {
+			case <-parentCtx.Done():
+				parentCtx = parentCtxOk
+				delayCh = time.After(delay)
+			case <-delayCh:
+				if parentCtx == parentCtxOk {
+					done = true
+				}
+			case <-newCtx.Done():
+				done = true
+			}
+		}
+		newCtxCancel()
+	}()
+	return newCtx, newCtxCancel
+}
+
+// DelayAfterContext2 is similar with DelayAfterContext except not returns cancel function.
+func DelayAfterContext2(ctx context.Context, delay time.Duration) context.Context {
+	newCtx, _ := DelayAfterContext(ctx, delay)
 	return newCtx
 }
 
