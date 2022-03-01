@@ -7,8 +7,9 @@ import (
 	"time"
 )
 
-// DelayContext creates a new cancel context.
-// It would be cancelled when ctx is done except before delay.
+// DelayContext creates a new cancel context not inherited from ctx.
+// It would be cancelled if ctx is done, after the delay started with the call of DelayContext is done.
+// The new context doesn't inherit ctx.
 // Calling the cancel function is not necessary.
 func DelayContext(ctx context.Context, delay time.Duration) (context.Context, context.CancelFunc) {
 	newCtx, newCtxCancel := context.WithCancel(context.Background())
@@ -67,7 +68,7 @@ func MultiContext2(parent context.Context, subs ...context.Context) context.Cont
 }
 
 // WaitContext creates a new cancel context inherited from parent.
-// It would be cancelled when all of the sub contexts are done.
+// It would be cancelled when all the sub contexts are done.
 // Calling the cancel function is not necessary.
 func WaitContext(parent context.Context, subs ...context.Context) (context.Context, context.CancelFunc) {
 	newCtx, newCtxCancel := context.WithCancel(parent)
@@ -96,6 +97,7 @@ func WaitContext2(parent context.Context, subs ...context.Context) context.Conte
 }
 
 // Or creates a new cancel context to cancel when at least one of the contexts is done.
+// The new context doesn't inherit any context in ctxs.
 func Or(ctxs ...context.Context) (context.Context, context.CancelFunc) {
 	return MultiContext(context.Background(), ctxs...)
 }
@@ -105,7 +107,8 @@ func Or2(ctxs ...context.Context) context.Context {
 	return MultiContext2(context.Background(), ctxs...)
 }
 
-// And creates a new cancel context to cancel when all of the contexts are done.
+// And creates a new cancel context to cancel when all the contexts are done.
+// The new context doesn't inherit any context in ctxs.
 func And(ctxs ...context.Context) (context.Context, context.CancelFunc) {
 	return WaitContext(context.Background(), ctxs...)
 }
@@ -116,6 +119,7 @@ func And2(ctxs ...context.Context) context.Context {
 }
 
 // AutoCancel cancels underlying context specified with cancel function automatically.
+// It returns ctx.
 func AutoCancel(ctx context.Context, cancel context.CancelFunc) context.Context {
 	go func() {
 		<-ctx.Done()
