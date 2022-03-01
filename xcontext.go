@@ -15,18 +15,19 @@ func DelayContext(ctx context.Context, delay time.Duration) (context.Context, co
 	newCtx, newCtxCancel := context.WithCancel(context.Background())
 	go func() {
 		parentCtx := ctx
+		parentCtxOk := context.Background()
 		delayCh := time.After(delay)
 		delayOkCh := make(chan time.Time)
 		for done := false; !done; {
 			select {
 			case <-parentCtx.Done():
-				parentCtx = context.Background()
+				parentCtx = parentCtxOk
 				if delayCh == delayOkCh {
 					done = true
 				}
 			case <-delayCh:
 				delayCh = delayOkCh
-				if parentCtx != ctx {
+				if parentCtx == parentCtxOk {
 					done = true
 				}
 			case <-newCtx.Done():
