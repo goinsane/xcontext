@@ -163,12 +163,6 @@ func AutoCancel(ctx context.Context, cancel context.CancelFunc) context.Context 
 	return ctx
 }
 
-// WithCancel2 is similar with context.WithCancel, except that it doesn't need to cancel context.
-// It returns a new context inherited from parent.
-func WithCancel2(parent context.Context) context.Context {
-	return AutoCancel(context.WithCancel(parent))
-}
-
 // WithDeadline2 is similar with context.WithDeadline, except that it doesn't need to cancel context.
 // It returns a new context inherited from parent.
 func WithDeadline2(parent context.Context, d time.Time) context.Context {
