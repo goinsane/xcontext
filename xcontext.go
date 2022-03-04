@@ -172,20 +172,38 @@ func WithCancel(parent context.Context) (context.Context, context.CancelFunc) {
 }
 
 // WithCancel2 is similar with WithCancel.
-// It returns only a new cancel context inherited from parent.
+// It returns only a new context inherited from parent.
 func WithCancel2(parent context.Context) context.Context {
 	ctx, _ := WithCancel(parent)
 	return ctx
 }
 
-// WithDeadline2 is similar with context.WithDeadline, except that it doesn't need to cancel context.
-// It returns a new context inherited from parent.
-func WithDeadline2(parent context.Context, d time.Time) context.Context {
-	return AutoCancel(context.WithDeadline(parent, d))
+// WithDeadline is similar with context.WithDeadline.
+// But it cancels the context when it was done through parent or deadline.
+func WithDeadline(parent context.Context, d time.Time) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithDeadline(parent, d)
+	AutoCancel(ctx, cancel)
+	return ctx, cancel
 }
 
-// WithTimeout2 is similar with context.WithTimeout, except that it doesn't need to cancel context.
-// It returns a new context inherited from parent.
+// WithDeadline2 is similar with WithDeadline.
+// It returns only a new context inherited from parent.
+func WithDeadline2(parent context.Context, d time.Time) context.Context {
+	ctx, _ := WithDeadline(parent, d)
+	return ctx
+}
+
+// WithTimeout is similar with context.WithTimeout.
+// But it cancels the context when it was done through parent or timeout.
+func WithTimeout(parent context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithTimeout(parent, timeout)
+	AutoCancel(ctx, cancel)
+	return ctx, cancel
+}
+
+// WithTimeout2 is similar with WithTimeout.
+// It returns only a new context inherited from parent.
 func WithTimeout2(parent context.Context, timeout time.Duration) context.Context {
-	return AutoCancel(context.WithTimeout(parent, timeout))
+	ctx, _ := WithTimeout(parent, timeout)
+	return ctx
 }
