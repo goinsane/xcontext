@@ -163,11 +163,19 @@ func AutoCancel(ctx context.Context, cancel context.CancelFunc) context.Context 
 	return ctx
 }
 
-// WithCancel2 is similar with context.WithCancel.
+// WithCancel is similar with context.WithCancel.
 // But it cancels the context when it was done through parent.
-// It returns a new cancel context inherited from parent.
+func WithCancel(parent context.Context) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(parent)
+	AutoCancel(ctx, cancel)
+	return ctx, cancel
+}
+
+// WithCancel2 is similar with WithCancel.
+// It returns only a new cancel context inherited from parent.
 func WithCancel2(parent context.Context) context.Context {
-	return AutoCancel(context.WithCancel(parent))
+	ctx, _ := WithCancel(parent)
+	return ctx
 }
 
 // WithDeadline2 is similar with context.WithDeadline, except that it doesn't need to cancel context.
