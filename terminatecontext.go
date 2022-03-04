@@ -15,13 +15,22 @@ type terminateContext struct {
 	context.CancelFunc
 }
 
+// Terminate calls cancel function of the underlying context.
 func (c *terminateContext) Terminate() {
 	c.CancelFunc()
 }
 
-// WithTerminate creates a new TerminateContext.
+// NewTerminateContext returns the underlying context as TerminateContext.
+// The code should call Terminate method or cancel function to release resources associated with it.
+func NewTerminateContext(ctx context.Context, cancel context.CancelFunc) TerminateContext {
+	result := new(terminateContext)
+	result.Context = ctx
+	result.CancelFunc = cancel
+	return result
+}
+
+// WithTerminate creates a new cancel context as TerminateContext.
+// The code should call Terminate method to release resources associated with it, as cancel function.
 func WithTerminate(parent context.Context) TerminateContext {
-	ctx := new(terminateContext)
-	ctx.Context, ctx.CancelFunc = context.WithCancel(parent)
-	return ctx
+	return NewTerminateContext(context.WithCancel(parent))
 }
