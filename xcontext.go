@@ -154,21 +154,19 @@ func And2(ctxs ...context.Context) context.Context {
 }
 
 // AutoCancel cancels the underlying context with cancel function when it was done through parent, deadline, timeout or in any way.
-// It returns ctx.
-func AutoCancel(ctx context.Context, cancel context.CancelFunc) context.Context {
+// It returns ctx and cancel.
+func AutoCancel(ctx context.Context, cancel context.CancelFunc) (context.Context, context.CancelFunc) {
 	go func() {
 		<-ctx.Done()
 		cancel()
 	}()
-	return ctx
+	return ctx, cancel
 }
 
 // WithCancel is similar with context.WithCancel.
 // But it cancels the context when it was done through parent.
 func WithCancel(parent context.Context) (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithCancel(parent)
-	AutoCancel(ctx, cancel)
-	return ctx, cancel
+	return AutoCancel(context.WithCancel(parent))
 }
 
 // WithCancel2 is similar with WithCancel.
@@ -181,9 +179,7 @@ func WithCancel2(parent context.Context) context.Context {
 // WithDeadline is similar with context.WithDeadline.
 // But it cancels the context when it was done through parent or deadline.
 func WithDeadline(parent context.Context, d time.Time) (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithDeadline(parent, d)
-	AutoCancel(ctx, cancel)
-	return ctx, cancel
+	return AutoCancel(context.WithDeadline(parent, d))
 }
 
 // WithDeadline2 is similar with WithDeadline.
@@ -196,9 +192,7 @@ func WithDeadline2(parent context.Context, d time.Time) context.Context {
 // WithTimeout is similar with context.WithTimeout.
 // But it cancels the context when it was done through parent or timeout.
 func WithTimeout(parent context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithTimeout(parent, timeout)
-	AutoCancel(ctx, cancel)
-	return ctx, cancel
+	return AutoCancel(context.WithTimeout(parent, timeout))
 }
 
 // WithTimeout2 is similar with WithTimeout.
