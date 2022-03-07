@@ -21,15 +21,28 @@ func (c *terminateContext) Terminate() {
 }
 
 // NewTerminateContext returns the underlying context as TerminateContext.
-// The code should call Terminate method or cancel function to release resources associated with it.
-func NewTerminateContext(ctx context.Context, cancel context.CancelFunc) TerminateContext {
+// The code should call TerminateContext.Terminate method or cancel function to release resources associated with it.
+func NewTerminateContext(ctx context.Context, cancel context.CancelFunc) (TerminateContext, context.CancelFunc) {
 	result := new(terminateContext)
 	result.Context, result.CancelFunc = ctx, cancel
-	return result
+	return result, cancel
 }
 
 // WithTerminate creates a new cancel context as TerminateContext.
-// The code should call Terminate method to release resources associated with it, as cancel function.
-func WithTerminate(parent context.Context) TerminateContext {
+// The code should call TerminateContext.Terminate method or cancel function to release resources associated with it.
+func WithTerminate(parent context.Context) (TerminateContext, context.CancelFunc) {
 	return NewTerminateContext(context.WithCancel(parent))
+}
+
+// WithTerminateAutoCancel is similar with WithTerminate.
+// But it cancels the context when it was done through parent.
+func WithTerminateAutoCancel(parent context.Context) (TerminateContext, context.CancelFunc) {
+	return NewTerminateContext(AutoCancel(context.WithCancel(parent)))
+}
+
+// WithTerminateAutoCancel2 is similar with WithTerminateAutoCancel.
+// It returns only a new context inherited from parent.
+func WithTerminateAutoCancel2(parent context.Context) TerminateContext {
+	ctx, _ := WithTerminateAutoCancel(parent)
+	return ctx
 }
