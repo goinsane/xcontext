@@ -34,6 +34,13 @@ func WithTerminate(parent context.Context) (TerminateContext, context.CancelFunc
 	return NewTerminateContext(context.WithCancel(parent))
 }
 
+// WithTerminate2 is similar with WithTerminate.
+// It returns only a new context inherited from parent.
+func WithTerminate2(parent context.Context) TerminateContext {
+	ctx, _ := WithTerminate(parent)
+	return ctx
+}
+
 // WithTerminateAutoCancel is similar with WithTerminate.
 // But it cancels the context when it was done through parent.
 func WithTerminateAutoCancel(parent context.Context) (TerminateContext, context.CancelFunc) {
