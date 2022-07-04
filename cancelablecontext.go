@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-// CancelableContext is a custom implementation of context.Context with Cancel() method to cancel context.Context.
+// CancelableContext is a custom implementation of context.Context with the Cancel() method to cancel context.Context.
 type CancelableContext interface {
 	context.Context
 	Cancel()
@@ -15,13 +15,13 @@ type cancelableContext struct {
 	context.CancelFunc
 }
 
-// Cancel calls cancel function of the underlying context.
+// Cancel calls the cancel function of the underlying context.
 func (c *cancelableContext) Cancel() {
 	c.CancelFunc()
 }
 
 // NewCancelableContext returns the underlying context as CancelableContext.
-// The code should call CancelableContext.Cancel method or cancel function to release resources associated with it.
+// The code should call CancelableContext.Cancel method or the cancel function to release resources associated with it.
 func NewCancelableContext(ctx context.Context, cancel context.CancelFunc) (CancelableContext, context.CancelFunc) {
 	result := new(cancelableContext)
 	result.Context, result.CancelFunc = ctx, cancel
@@ -29,7 +29,7 @@ func NewCancelableContext(ctx context.Context, cancel context.CancelFunc) (Cance
 }
 
 // WithCancelable creates a new cancel context as CancelableContext.
-// The code should call CancelableContext.Cancel method or cancel function to release resources associated with it.
+// The code should call CancelableContext.Cancel method or the cancel function to release resources associated with it.
 func WithCancelable(parent context.Context) (CancelableContext, context.CancelFunc) {
 	return NewCancelableContext(context.WithCancel(parent))
 }
