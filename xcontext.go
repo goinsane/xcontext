@@ -13,10 +13,11 @@ import (
 // Calling the cancel function is not necessary.
 func DelayContext(ctx context.Context, delay time.Duration) (context.Context, context.CancelFunc) {
 	newCtx, newCtxCancel := context.WithCancel(context.Background())
+	delayTimer := time.NewTimer(delay)
 	go func() {
 		parentCtx := ctx
 		parentCtxOk := context.Background()
-		delayCh := time.After(delay)
+		delayCh := delayTimer.C
 		delayOkCh := make(<-chan time.Time)
 		for done := false; !done; {
 			select {
@@ -35,6 +36,7 @@ func DelayContext(ctx context.Context, delay time.Duration) (context.Context, co
 			}
 		}
 		newCtxCancel()
+		delayTimer.Stop()
 	}()
 	return newCtx, newCtxCancel
 }
@@ -51,16 +53,19 @@ func DelayContext2(ctx context.Context, delay time.Duration) context.Context {
 // Calling the cancel function is not necessary.
 func DelayAfterContext(ctx context.Context, delay time.Duration) (context.Context, context.CancelFunc) {
 	newCtx, newCtxCancel := context.WithCancel(context.Background())
+	delayTimer := time.NewTimer(0)
+	if !delayTimer.Stop() {
+		<-delayTimer.C
+	}
 	go func() {
 		parentCtx := ctx
 		parentCtxOk := context.Background()
-		delayCh := make(<-chan time.Time)
 		for done := false; !done; {
 			select {
 			case <-parentCtx.Done():
 				parentCtx = parentCtxOk
-				delayCh = time.After(delay)
-			case <-delayCh:
+				delayTimer.Reset(delay)
+			case <-delayTimer.C:
 				if parentCtx == parentCtxOk {
 					done = true
 				}
@@ -69,6 +74,7 @@ func DelayAfterContext(ctx context.Context, delay time.Duration) (context.Contex
 			}
 		}
 		newCtxCancel()
+		delayTimer.Stop()
 	}()
 	return newCtx, newCtxCancel
 }
